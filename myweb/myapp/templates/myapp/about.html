@@ -1,0 +1,149 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+{% block body %}
+  <!-- Navbar Start -->
+  <nav
+  class="navbar navbar-expand-lg bg-white navbar-light sticky-top py-lg-0 px-4 px-lg-5 wow fadeIn"
+  data-wow-delay="0.1s"
+  >
+  <a href="{% url "index" %}" class="navbar-brand p-0">
+    <img class="img-fluid me-3" src="{% static 'myapp/images/icon/icon-10.png' %}" alt="Icon" />
+    <h1 class="m-0 text-primary">AfricaVision</h1>
+  </a>
+  <button
+    type="button"
+    class="navbar-toggler"
+    data-bs-toggle="collapse"
+    data-bs-target="#navbarCollapse"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse py-4 py-lg-0" id="navbarCollapse">
+    <div class="navbar-nav ms-auto">
+      <a href="{% url "index" %}" class="nav-item nav-link">Trang chủ</a>
+      <a href="{% url "about" %}" class="nav-item nav-link active">Giới thiệu</a>
+      <a href="{% url "service" %}" class="nav-item nav-link">Dịch vụ</a>
+      <div class="nav-item dropdown">
+        <a
+          href="#"
+          class="nav-link dropdown-toggle"
+          data-bs-toggle="dropdown"
+          >Khác</a
+        >
+        <div class="dropdown-menu rounded-0 rounded-bottom m-0">
+          <a href="{% url "animal" %}" class="dropdown-item">Thông tin về các loài động vật</a>
+          <a href="{% url "testimonial" %}" class="dropdown-item">Nhận xét từ người dùng</a>
+          <a href="{% url "error" %}" class="dropdown-item">404 Page</a>
+        </div>
+      </div>
+      <a href="{% url "contact" %}" class="nav-item nav-link">Kết nối với chúng tôi</a>
+    </div>
+    <a href="" class="btn btn-primary"
+      >Đăng nhập<i class="fa fa-arrow-right ms-3"></i
+    ></a>
+  </div>
+  </nav>
+  <!-- Navbar End -->
+
+  <!-- Page Header Start -->
+  <div
+  class="container-fluid header-bg py-5 mb-5 wow fadeIn"
+  data-wow-delay="0.1s"
+  >
+  <div class="container py-5">
+    <h1 class="display-4 text-white mb-3 animated slideInDown">Giới thiệu</h1>
+    <nav aria-label="breadcrumb animated slideInDown">
+      <ol class="breadcrumb mb-0">
+        <li class="breadcrumb-item">
+          <a class="text-white" href="#">Trang chủ</a>
+        </li>
+        <li class="breadcrumb-item text-primary active" aria-current="page">
+          Giới thiệu
+        </li>
+      </ol>
+    </nav>
+  </div>
+  </div>
+  <!-- Page Header End -->
+
+  <!-- About Start -->
+  <div class="container-xxl py-5">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+        <p><span class="text-primary me-2">#</span>Welcome To AfricaVision</p>
+        <h1 class="display-5 mb-4">
+          Nhận diện động vật hoang dã Châu Phi qua hình ảnh hoặc video tại
+          <span class="text-primary">AfricaVision</span> !
+        </h1>
+        <p class="mb-4">
+          Bạn có thể tìm hiểu, mở rộng kiến thức về các loài động vật hoang dã Châu Phi qua những hình ảnh hoặc video sinh động
+        </p>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Nhanh
+        </h5>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Chính xác
+        </h5>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Đa dạng các loài động vật
+        </h5>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Miễn phí
+        </h5>
+        <a class="btn btn-primary py-3 px-5 mt-3" href="">Tìm hiểu thêm</a>
+      </div>
+      <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+        <div class="img-border">
+          <img class="img-fluid" src="{% static 'myapp/images/about.jpg' %}" alt="" />
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- About End -->
+
+  <!-- Facts Start -->
+  <div
+  class="container-xxl bg-primary facts my-5 py-5 wow fadeInUp"
+  data-wow-delay="0.1s"
+  >
+  <div class="container py-5">
+    <div class="row g-4">
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.1s"
+      >
+        <i class="fa fa-paw fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">11</h1>
+        <p class="text-white mb-0">Total Animal</p>
+      </div>
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.3s"
+      >
+        <i class="fa fa-users fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">12345</h1>
+        <p class="text-white mb-0">Daily users</p>
+      </div>
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.5s"
+      >
+        <i class="fa fa-certificate fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">12345</h1>
+        <p class="text-white mb-0">Total Membership</p>
+      </div>
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.7s"
+      >
+        <i class="fa fa-shield-alt fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">12345</h1>
+        <p class="text-white mb-0">Save Wild Life</p>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Facts End -->
+{% endblock body %}

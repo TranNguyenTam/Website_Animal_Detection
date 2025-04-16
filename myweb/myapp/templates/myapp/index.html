@@ -1,0 +1,435 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+{% block body %}
+  <!-- Navbar Start -->
+  <nav
+  class="navbar navbar-expand-lg bg-white navbar-light sticky-top py-lg-0 px-4 px-lg-5 wow fadeIn"
+  data-wow-delay="0.1s"
+  >
+  <a href="{% url "index" %}" class="navbar-brand p-0">
+    <img class="img-fluid me-3" src="{% static 'myapp/images/icon/icon-10.png' %}" alt="Icon" />
+    <h1 class="m-0 text-primary">AfricaVision</h1>
+  </a>
+  <button
+    type="button"
+    class="navbar-toggler"
+    data-bs-toggle="collapse"
+    data-bs-target="#navbarCollapse"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse py-4 py-lg-0" id="navbarCollapse">
+    <div class="navbar-nav ms-auto">
+      <a href="{% url "index" %}" class="nav-item nav-link active">Trang chủ</a>
+      <a href="{% url "about" %}" class="nav-item nav-link">Giới thiệu</a>
+      <a href="{% url "service" %}" class="nav-item nav-link">Dịch vụ</a>
+      <div class="nav-item dropdown">
+        <a
+          href="#"
+          class="nav-link dropdown-toggle"
+          data-bs-toggle="dropdown"
+          >Khác</a
+        >
+        <div class="dropdown-menu rounded-0 rounded-bottom m-0">
+          <a href="{% url "animal" %}" class="dropdown-item">Thông tin về các loài động vật</a>
+          <a href="{% url "testimonial" %}" class="dropdown-item">Nhận xét từ người dùng</a>
+          <a href="{% url "error" %}" class="dropdown-item">404 Page</a>
+        </div>
+      </div>
+      <a href="{% url "contact" %}" class="nav-item nav-link">Kết nối với chúng tôi</a>
+    </div>
+    <a href="" class="btn btn-primary"
+      >Đăng nhập<i class="fa fa-arrow-right ms-3"></i
+    ></a>
+  </div>
+  </nav>
+  <!-- Navbar End -->
+
+  <!-- Header Start -->
+  <div class="container-fluid bg-dark p-0 mb-5">
+  <div class="row g-0 flex-column-reverse flex-lg-row">
+    <div class="col-lg-6 p-0 wow fadeIn" data-wow-delay="0.1s">
+      <div
+        class="header-bg h-100 d-flex flex-column justify-content-center p-5"
+      >
+        <h1 class="display-4 text-light mb-5">
+          Nhận diện động vật hoang dã Châu Phi
+        </h1>
+        <div class="d-flex align-items-center pt-4 animated slideInDown">
+          <a href="" class="btn btn-primary py-sm-3 px-3 px-sm-5 me-5"
+            >Tải ảnh</a
+          >
+          <button
+            type="button"
+            class="btn-play"
+            data-bs-toggle="modal"
+            data-src=""
+            data-bs-target="#videoModal"
+          >
+            <span></span>
+          </button>
+          <h6 class="text-white m-0 ms-4 d-none d-sm-block">Tải video</h6>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 wow fadeIn" data-wow-delay="0.5s">
+      <div class="owl-carousel header-carousel">
+        <div class="owl-carousel-item">
+          <img class="img-fluid" src="{% static 'myapp/images/Elephant.jpg' %}" alt="" />
+        </div>
+        <div class="owl-carousel-item">
+          <img class="img-fluid" src="{% static 'myapp/images/Cheetah.jpg' %}" alt="" />
+        </div>
+        <div class="owl-carousel-item">
+          <img class="img-fluid" src="{% static 'myapp/images/Antelope.jpg' %}" alt="" />
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Header End -->
+
+  <!-- Video Modal Start -->
+  {% comment %} <div
+  class="modal modal-video fade"
+  id="videoModal"
+  tabindex="-1"
+  aria-labelledby="exampleModalLabel"
+  aria-hidden="true"
+  >
+  <div class="modal-dialog">
+    <div class="modal-content rounded-0">
+      <div class="modal-header">
+        <h3 class="modal-title" id="exampleModalLabel">Youtube Video</h3>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- 16:9 aspect ratio -->
+        <div class="ratio ratio-16x9">
+          <iframe
+            class="embed-responsive-item"
+            src=""
+            id="video"
+            allowfullscreen
+            allowscriptaccess="always"
+            allow="autoplay"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div> {% endcomment %}
+  <!-- Video Modal End -->
+
+  <!-- About Start -->
+  <div class="container-xxl py-5">
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+        <p><span class="text-primary me-2">#</span>Welcome To AfricaVision</p>
+        <h1 class="display-5 mb-4">
+          Nhận diện động vật hoang dã Châu Phi qua hình ảnh hoặc video tại
+          <span class="text-primary">AfricaVision</span> !
+        </h1>
+        <p class="mb-4">
+          Bạn có thể tìm hiểu, mở rộng kiến thức về các loài động vật hoang dã Châu Phi qua những hình ảnh hoặc video sinh động
+        </p>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Nhanh
+        </h5>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Chính xác
+        </h5>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Đa dạng các loài động vật
+        </h5>
+        <h5 class="mb-3">
+          <i class="far fa-check-circle text-primary me-3"></i>Miễn phí
+        </h5>
+        <a class="btn btn-primary py-3 px-5 mt-3" href="">Tìm hiểu thêm</a>
+      </div>
+      <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+        <div class="img-border">
+          <img class="img-fluid" src="{% static 'myapp/images/about.jpg' %}" alt="" />
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- About End -->
+
+  <!-- Facts Start -->
+  <div
+  class="container-xxl bg-primary facts my-5 py-5 wow fadeInUp"
+  data-wow-delay="0.1s"
+  >
+  <div class="container py-5">
+    <div class="row g-4">
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.1s"
+      >
+        <i class="fa fa-paw fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">11</h1>
+        <p class="text-white mb-0">Total Animal</p>
+      </div>
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.3s"
+      >
+        <i class="fa fa-users fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">12345</h1>
+        <p class="text-white mb-0">Daily users</p>
+      </div>
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.5s"
+      >
+        <i class="fa fa-certificate fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">12345</h1>
+        <p class="text-white mb-0">Total Membership</p>
+      </div>
+      <div
+        class="col-md-6 col-lg-3 text-center wow fadeIn"
+        data-wow-delay="0.7s"
+      >
+        <i class="fa fa-shield-alt fa-3x text-primary mb-3"></i>
+        <h1 class="text-white mb-2" data-toggle="counter-up">12345</h1>
+        <p class="text-white mb-0">Save Wild Life</p>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Facts End -->
+
+  <!-- Service Start -->
+  <div class="container-xxl py-5">
+  <div class="container">
+    <div class="row g-5 mb-5 wow fadeInUp" data-wow-delay="0.1s">
+      <div class="col-lg-6">
+        <p><span class="text-primary me-2">#</span>Our Services</p>
+        <h1 class="display-5 mb-0">
+          Những dịch vụ đặc biệt cho người dùng của
+          <span class="text-primary">AfricaVision</span> !
+        </h1>
+      </div>
+      <div class="col-lg-6">
+        <div
+          class="bg-primary h-100 d-flex align-items-center py-4 px-4 px-sm-5"
+        >
+          <i class="fa fa-3x fa-mobile-alt text-white"></i>
+          <div class="ms-4">
+            <p class="text-white mb-0">Gọi để được tư vấn kĩ lưỡng</p>
+            <h2 class="text-white mb-0">+012 345 6789</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row gy-5 gx-4">
+      <div
+        class="col-lg-3 col-md-4 col-sm-6 wow fadeInUp"
+        data-wow-delay="0.3s"
+      >
+        <img class="img-fluid mb-3" src="{% static 'myapp/images/icon/icon-3.png' %}" alt="Icon" />
+        <h5 class="mb-3">Nhận diện động vật qua hình ảnh/video</h5>
+        <span
+          >...</span
+        >
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Service End -->
+
+  <!-- Animal Start -->
+  <div class="container-xxl py-5">
+  <div class="container">
+    <div
+      class="row g-5 mb-5 align-items-end wow fadeInUp"
+      data-wow-delay="0.1s"
+    >
+      <div class="col-lg-6">
+        <p><span class="text-primary me-2">#</span>Our Animals</p>
+        <h1 class="display-5 mb-0">
+          Các loài động vật mà <span class="text-primary">AfricaVision</span> có thể nhận diện !
+        </h1>
+      </div>
+      <div class="col-lg-6 text-lg-end">
+        <a class="btn btn-primary py-3 px-5" href=""
+          >Khám phá thêm các loài động vật khác</a
+        >
+      </div>
+    </div>
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="row g-4">
+          <div class="col-12">
+            <a
+              class="animal-item"
+              href="{% static 'myapp/images/Antelope_1.jpg' %}"
+              data-lightbox="animal"
+            >
+              <div class="position-relative">
+                <img class="img-fluid" src="{% static 'myapp/images/Antelope_1.jpg' %}" alt="" />
+                <div class="animal-text p-4">
+                  <p class="text-white small text-uppercase mb-0">Animal</p>
+                  <h5 class="text-white mb-0">Antelope</h5>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-12">
+            <a
+              class="animal-item"
+              href="{% static 'myapp/images/Giraffe.jpg' %}"
+              data-lightbox="animal"
+            >
+              <div class="position-relative">
+                <img class="img-fluid" src="{% static 'myapp/images/Giraffe.jpg' %}" alt="" />
+                <div class="animal-text p-4">
+                  <p class="text-white small text-uppercase mb-0">Animal</p>
+                  <h5 class="text-white mb-0">Giraffe</h5>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+        <div class="row g-4">
+          <div class="col-12">
+            <a
+              class="animal-item"
+              href="{% static 'myapp/images/Lion.jpeg' %}"
+              data-lightbox="animal"
+            >
+              <div class="position-relative">
+                <img class="img-fluid" src="{% static 'myapp/images/Lion.jpeg' %}" alt="" />
+                <div class="animal-text p-4">
+                  <p class="text-white small text-uppercase mb-0">Animal</p>
+                  <h5 class="text-white mb-0">Lion</h5>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-12">
+            <a
+              class="animal-item"
+              href="{% static 'myapp/images/Zebra.jpg' %}"
+              data-lightbox="animal"
+            >
+              <div class="position-relative">
+                <img class="img-fluid" src="{% static 'myapp/images/Zebra.jpg' %}" alt="" />
+                <div class="animal-text p-4">
+                  <p class="text-white small text-uppercase mb-0">Animal</p>
+                  <h5 class="text-white mb-0">Zebra</h5>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+        <div class="row g-4">
+          <div class="col-12">
+            <a
+              class="animal-item"
+              href="{% static 'myapp/images/Elephant.jpg' %}"
+              data-lightbox="animal"
+            >
+              <div class="position-relative">
+                <img class="img-fluid" src="{% static 'myapp/images/Elephant.jpg' %}" alt="" />
+                <div class="animal-text p-4">
+                  <p class="text-white small text-uppercase mb-0">Animal</p>
+                  <h5 class="text-white mb-0">Elephant</h5>
+                </div>
+              </div>
+            </a>
+          </div>
+          <div class="col-12">
+            <a
+              class="animal-item"
+              href="{% static 'myapp/images/Cheetah.jpg' %}"
+              data-lightbox="animal"
+            >
+              <div class="position-relative">
+                <img class="img-fluid" src="{% static 'myapp/images/Cheetah.jpg' %}" alt="" />
+                <div class="animal-text p-4">
+                  <p class="text-white small text-uppercase mb-0">Animal</p>
+                  <h5 class="text-white mb-0">Cheetah</h5>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Animal End -->
+
+  <!-- Testimonial Start -->
+  <div class="container-xxl py-5">
+  <div class="container">
+    <h1
+      class="display-5 text-center mb-5 wow fadeInUp"
+      data-wow-delay="0.1s"
+    >
+      Nhận xét từ người dùng!
+    </h1>
+    <div
+      class="owl-carousel testimonial-carousel wow fadeInUp"
+      data-wow-delay="0.1s"
+    >
+      <div class="testimonial-item text-center">
+        <img
+          class="img-fluid rounded-circle border border-2 p-2 mx-auto mb-4"
+          src="{% static 'myapp/images/testimonial-1.jpg' %}"
+          style="width: 100px; height: 100px"
+        />
+        <div class="testimonial-text rounded text-center p-4">
+          <p>
+            ...
+          </p>
+          <h5 class="mb-1">Patient Name</h5>
+          <span class="fst-italic">Profession</span>
+        </div>
+      </div>
+      <div class="testimonial-item text-center">
+        <img
+          class="img-fluid rounded-circle border border-2 p-2 mx-auto mb-4"
+          src="{% static 'myapp/images/testimonial-2.jpg' %}"
+          style="width: 100px; height: 100px"
+        />
+        <div class="testimonial-text rounded text-center p-4">
+          <p>
+            ...
+          </p>
+          <h5 class="mb-1">Patient Name</h5>
+          <span class="fst-italic">Profession</span>
+        </div>
+      </div>
+      <div class="testimonial-item text-center">
+        <img
+          class="img-fluid rounded-circle border border-2 p-2 mx-auto mb-4"
+          src="{% static 'myapp/images/testimonial-3.jpg' %}"
+          style="width: 100px; height: 100px"
+        />
+        <div class="testimonial-text rounded text-center p-4">
+          <p>
+            ...
+          </p>
+          <h5 class="mb-1">Patient Name</h5>
+          <span class="fst-italic">Profession</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <!-- Testimonial End -->
+{% endblock body %}
