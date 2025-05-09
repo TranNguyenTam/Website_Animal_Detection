@@ -76,8 +76,19 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Định nghĩa thư mục media
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Định nghĩa thư mục con
+UPLOAD_DIR = os.path.join(MEDIA_ROOT, 'upload')
+DETECT_DIR = os.path.join(MEDIA_ROOT, 'detect')
+
+# Tạo thư mục nếu chưa tồn tại
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(DETECT_DIR, exist_ok=True)
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
