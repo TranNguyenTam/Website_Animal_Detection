@@ -1,0 +1,70 @@
+{% extends "myapp/base.html" %}
+{% load static %}
+{% block body %}
+  <!-- Navbar Start -->
+  <nav
+  class="navbar navbar-expand-lg bg-white navbar-light sticky-top py-lg-0 px-4 px-lg-5 wow fadeIn"
+  data-wow-delay="0.1s"
+  >
+  <a href="{% url "index" %}" class="navbar-brand p-0">
+    <img class="img-fluid me-3" src="{% static 'myapp/images/icon/icon-10.png' %}" alt="Icon" />
+    <h1 class="m-0 text-primary">AfricaVision</h1>
+  </a>
+  <button
+    type="button"
+    class="navbar-toggler"
+    data-bs-toggle="collapse"
+    data-bs-target="#navbarCollapse"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse py-4 py-lg-0" id="navbarCollapse">
+    <div class="navbar-nav ms-auto">
+      {% if user.is_authenticated %}
+      <a class="nav-item nav-link">Xin chào, {{ user.username }}!</a>
+      <a href="{% url "history" %}" class="nav-item nav-link">Lịch sử</a>
+    </div>
+    <a href="{% url 'signout' %}" class="btn btn-primary"> Đăng xuất
+    <i class="fa fa-arrow-right ms-3"></i>
+    </a>
+    {% else %}
+    <a href="{% url 'signin' %}" class="btn btn-primary"> Đăng nhập
+    <i class="fa fa-arrow-right ms-3"></i>
+    </a>
+    {% endif %}
+  </div>
+  </nav>
+  <!-- Navbar End -->
+
+  <!-- Header Start -->
+  {% if user.is_authenticated %}
+  <div class="container-fluid p-0 mb-5">
+  <div class="row g-0">
+    <div class="col-lg-12 p-0 wow fadeIn" data-wow-delay="0.1s">
+      <div
+        class="header-bg h-100 d-flex flex-column justify-content-center align-items-center p-5"
+      >
+        <h1 class="display-4 text-light mb-5 text-center">
+          Nhận diện động vật hoang dã Châu Phi
+        </h1>
+        <div class="d-flex justify-content-center align-items-center pt-4 animated slideInDown">
+          <a class="btn btn-primary py-sm-3 px-3 px-sm-5 me-5"
+            >Tải ảnh</a
+          >
+          <button
+            type="button"
+            class="btn-play"
+            data-bs-toggle="modal"
+            data-bs-target="#videoModal"
+          >
+            <span></span>
+          </button>
+          <h6 class="text-white m-0 ms-4 d-none d-sm-block">Tải video</h6>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  {% endif %}
+  <!-- Header End -->
+{% endblock body %}

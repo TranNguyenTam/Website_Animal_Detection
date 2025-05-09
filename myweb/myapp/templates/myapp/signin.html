@@ -28,11 +28,12 @@
                     </div>
                     </div>
                 </div>
-                <form action="#!">
+                <form method="POST" action="{% url 'signin' %}">
+                    {% csrf_token %}
                     <div class="row gy-3 gy-md-4 overflow-hidden">
                     <div class="col-12">
-                        <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="email" id="email" placeholder="" required>
+                        <label for="username_email" class="form-label">Username or Email <span class="text-danger">*</span></label>
+                        <input type="username_email" class="form-control" name="username_email" id="username_email" placeholder="" required>
                     </div>
                     <div class="col-12">
                         <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
@@ -53,6 +54,16 @@
                     </div>
                     </div>
                 </form>
+                <br>
+                {% if messages %}
+                    <div class="col-12">
+                        {% for message in messages %}
+                            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
                 <div class="row">
                     <div class="col-12">
                     <hr class="mt-5 mb-4 border-secondary-subtle">
