@@ -74,13 +74,13 @@
   </div>
 
   <div class="d-flex justify-content-center">
-    <div id="loadingMessage" class="fs-4 mb-5 text-center" >Tải ảnh hoặc video để hệ thống nhận diện...</div>
+    <div id="loadingMessage" class="fs-4 mb-5 text-center" >Tải ảnh hoặc video bạn muốn nhận diện lên website...</div>
   </div>
   
-  <!-- Button trigger modal (initially hidden) -->
+  <!-- Button trigger modal -->
   <div class="d-flex justify-content-center">
     <button type="button" class="btn btn-primary" id="mediaButton" data-bs-toggle="modal" data-bs-target="#mediaModal" style="display: none;">
-      Xem ảnh hoặc video đã tải lên
+        <!-- Content-->
     </button>
   </div>
 
@@ -89,7 +89,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="mediaModalLabel">Ảnh hoặc video đã tải lên</h5>
+          <h5 class="modal-title" id="mediaModalLabel"><!-- Title--></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
           </button>
         </div>
@@ -98,7 +98,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-          <a href="#" id="downloadLink" class="btn btn-primary">Tải xuống</a>
+          <a id="downloadLink" class="btn btn-primary" download>Tải xuống</a>
         </div>
       </div>
     </div>
@@ -110,6 +110,7 @@
       const input = document.getElementById(inputId);
       const mediaButton = document.getElementById('mediaButton');
       const mediaContent = document.getElementById('mediaContent');
+      const mediaModalLabel = document.getElementById('mediaModalLabel');
       const downloadLink = document.getElementById('downloadLink');
       const loadingMessage = document.getElementById('loadingMessage');
       const progressBar = document.getElementById('progressBar');
@@ -119,13 +120,14 @@
         const file = event.target.files[0];
         if (!file) return;
 
-        loadingMessage.innerHTML = 'Đang tiến hành nhận diện...';
+        loadingMessage.innerHTML = 'Hệ thống tiến hành nhận diện...';
         progressBar.style.width = `100%`;
         progressBar.setAttribute('aria-valuenow', 100);
 
         // Gửi file lên server
         const formData = new FormData();
         formData.append('media', file);
+        formData.append('original_filename', file.name);
 
         fetch('/upload_media/', { 
           method: 'POST',
@@ -144,39 +146,43 @@
           if (data.success) {
             progressBar.style.width = `0%`;
             progressBar.setAttribute('aria-valuenow', 0);
-            loadingMessage.innerHTML = 'Quá trình nhận diện hoàn tất!';
-
-            // Hiển thị nút xem media
+            loadingMessage.innerHTML = 'Quá trình nhận diện hoàn tất !';
             mediaButton.style.display = 'block';
-
-            // Xóa nội dung media cũ
-            mediaContent.innerHTML = '';
 
             // Tạo phần tử media mới
             if (file.type.startsWith('video/')) {
+              mediaButton.innerHTML = 'Khám phá động vật xuất hiện trong video';
+              mediaModalLabel.innerHTML = 'Khám phá động vật xuất hiện trong video';
+              mediaContent.innerHTML = '';
+
               // Xử lý video
               const video = document.createElement('video');
               video.src = data.url;
               video.controls = true;
               video.className = 'img-fluid w-100';
-              video.type = 'video/'; // Đảm bảo trình duyệt biết định dạng video
               video.onerror = () => {
                 alert('Không thể tải video. Vui lòng thử lại hoặc kiểm tra định dạng.');
               };
               mediaContent.appendChild(video);
-              downloadLink.href = data.url;
+              downloadLink.href = data.download_url;
+              downloadLink.setAttribute('download', data.download_filename);
               // Kiểm tra xem video có thể phát được không
               video.load();
               video.play().catch(error => {
                 console.error('Lỗi phát video:', error);
               });
             } else {
+              mediaButton.innerHTML = 'Khám phá động vật xuất hiện trong ảnh';
+              mediaModalLabel.innerHTML = 'Khám phá động vật xuất hiện trong ảnh';
+              mediaContent.innerHTML = '';
+
               // Xử lý ảnh
               const img = document.createElement('img');
               img.src = data.url;
               img.className = 'img-fluid w-100';
               mediaContent.appendChild(img);
-              downloadLink.href = data.url;
+              downloadLink.href = data.download_url;
+              downloadLink.setAttribute('download', data.download_filename);
             }
           } else {
             alert(`Tải lên thất bại: ${data.error || 'Lỗi không xác định'}`);
@@ -188,7 +194,6 @@
         });
       });
     }
-
     // Gắn sự kiện cho cả hai input
     handleUpload('imageUpload');
     handleUpload('videoUpload');

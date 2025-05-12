@@ -4,13 +4,14 @@ import cv2
 import uuid
 import logging
 import sys
+import mimetypes
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.forms import ValidationError
-from django.http import JsonResponse
+from django.http import HttpResponseNotFound, JsonResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from ultralytics import YOLO
@@ -117,9 +118,24 @@ def upload(request):
 logger = logging.getLogger(__name__)
 
 @csrf_exempt
+def download_file(request, filename):
+    file_path = os.path.join(settings.DETECT_DIR, filename)
+
+    if not os.path.exists(file_path):
+        return HttpResponseNotFound('File not found')
+
+    original_name = request.GET.get('name', filename)
+
+    mime_type, _ = mimetypes.guess_type(file_path)
+    response = FileResponse(open(file_path, 'rb'), content_type=mime_type)
+    response['Content-Disposition'] = f'attachment; filename="{original_name}"'
+    return response
+
+@csrf_exempt
 def upload_media(request):
     if request.method == 'POST' and request.FILES.get('media'):
         media = request.FILES['media']
+        original_filename = request.POST.get('original_filename')
 
         # Tạo tên file duy nhất để tránh trùng lặp
         file_ext = os.path.splitext(media.name)[1]
@@ -135,7 +151,7 @@ def upload_media(request):
                     destination.write(chunk)
 
         except Exception as e:
-            logger.error(f"Lỗi khi lưu file: {str(e)}")
+            # logger.error(f"Lỗi khi lưu file: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Lưu file thất bại: {str(e)}'})
 
         # Tải mô hình YOLOv8
@@ -144,7 +160,7 @@ def upload_media(request):
             model = YOLO(os.path.join(settings.BASE_DIR, 'myapp/models/best.pt')).to(device)
             
         except Exception as e:
-            logger.error(f"Lỗi khi tải mô hình: {str(e)}")
+            # logger.error(f"Lỗi khi tải mô hình: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Tải mô hình thất bại: {str(e)}'})
 
         # Xử lý file
@@ -195,11 +211,24 @@ def upload_media(request):
             else:
                 return JsonResponse({'success': False, 'error': 'Định dạng file không được hỗ trợ'})
 
-            logger.info(f"Xử lý file thành công")
-            return JsonResponse({'success': True, 'url': file_url})
+            # Tạo tên file tải xuống
+            if original_filename:
+                name, ext = os.path.splitext(original_filename)
+                download_filename = f"{name}_ket_qua{ext}"
+            else:
+                download_filename = f"ket_qua{file_ext}"
+
+            # logger.info(f"Xử lý file thành công")
+
+            download_url = f"/download/{output_filename}?name={download_filename}"
+
+            return JsonResponse({'success': True,
+                                  'url': file_url,
+                                  'download_url': download_url,
+                                  'download_filename': download_filename})
         
         except Exception as e:
-            logger.error(f"Lỗi khi xử lý file: {str(e)}")
+            # logger.error(f"Lỗi khi xử lý file: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Xử lý thất bại: {str(e)}'})
 
     return JsonResponse({'success': False, 'error': 'Không có file hoặc yêu cầu không hợp lệ'})

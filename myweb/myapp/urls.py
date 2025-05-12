@@ -16,5 +16,6 @@ urlpatterns = [
     path('signout/', views.signout, name='signout'),
     path('upload/', views.upload, name='upload'),
     path('upload_media/', views.upload_media, name='upload_media'),
+    path('download/<str:filename>/', views.download_file, name='download_file'),
     path('history/', views.history, name='history'),
 ]
