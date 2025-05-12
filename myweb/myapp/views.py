@@ -1,3 +1,10 @@
+import torch
+import os
+import cv2
+import uuid
+import logging
+import sys
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -5,16 +12,16 @@ from django.contrib.auth.models import User
 from django.forms import ValidationError
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import os
 from django.conf import settings
 from ultralytics import YOLO
-import cv2
-import numpy as np
 from PIL import Image
-import uuid
-import torch
 
 # Create your views here.
+
+# Đảm bảo console hỗ trợ UTF-8
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
 
 def index(request):
     return render(request,'myapp/index.html')
@@ -106,10 +113,14 @@ def signout(request):
 def upload(request):
     return render(request,'myapp/upload.html')
 
+# Thiết lập logging
+logger = logging.getLogger(__name__)
+
 @csrf_exempt
 def upload_media(request):
     if request.method == 'POST' and request.FILES.get('media'):
         media = request.FILES['media']
+
         # Tạo tên file duy nhất để tránh trùng lặp
         file_ext = os.path.splitext(media.name)[1]
         unique_filename = f"{uuid.uuid4()}{file_ext}"
@@ -118,63 +129,78 @@ def upload_media(request):
         file_path = os.path.join(settings.UPLOAD_DIR, unique_filename)
 
         # Lưu file gốc
-        with open(file_path, 'wb+') as destination:
-            for chunk in media.chunks():
-                destination.write(chunk)
+        try:
+            with open(file_path, 'wb+') as destination:
+                for chunk in media.chunks():
+                    destination.write(chunk)
+
+        except Exception as e:
+            logger.error(f"Lỗi khi lưu file: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Lưu file thất bại: {str(e)}'})
 
         # Tải mô hình YOLOv8
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model = YOLO(os.path.join(settings.BASE_DIR, 'myapp/models/best.pt')).to(device)
+        try:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            model = YOLO(os.path.join(settings.BASE_DIR, 'myapp/models/best.pt')).to(device)
+            
+        except Exception as e:
+            logger.error(f"Lỗi khi tải mô hình: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Tải mô hình thất bại: {str(e)}'})
 
         # Xử lý file
         output_filename = f"processed_{unique_filename}"
         output_path = os.path.join(settings.DETECT_DIR, output_filename)
         file_url = f"{settings.MEDIA_URL}detect/{output_filename}"
 
-        if media.name.lower().endswith(('.jpg', '.jpeg', '.png')):
-            # Nhận diện với YOLOv8
-            results = model(file_path)
-
-            # Vẽ kết quả lên ảnh
-            annotated_img = results[0].plot()  # Kết quả là BGR
-
-            # Chuyển từ BGR sang RGB
-            annotated_img_rgb = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
-
-            # Lưu ảnh đã nhận diện
-            annotated_img_pil = Image.fromarray(annotated_img_rgb)
-            annotated_img_pil.save(output_path)
-
-        elif media.name.lower().endswith(('.mp4', '.avi', '.mov')):
-            # Xử lý video
-            cap = cv2.VideoCapture(file_path)
-            fourcc = cv2.VideoWriter_fourcc(*'H264')
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-            # Tạo video đầu ra
-            out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-
-            while cap.isOpened():
-                ret, frame = cap.read()
-                if not ret:
-                    break
-
+        try:
+            if media.name.lower().endswith(('.jpg', '.jpeg', '.png')):
                 # Nhận diện với YOLOv8
-                results = model(frame)
-                annotated_frame = results[0].plot()  # Vẽ bounding box và nhãn
+                results = model(file_path)
 
-                # Ghi frame đã nhận diện vào video đầu ra
-                out.write(annotated_frame)
+                # Vẽ kết quả lên ảnh
+                annotated_img = results[0].plot()  # Kết quả là BGR
 
-            cap.release()
-            out.release()
+                # Chuyển từ BGR sang RGB
+                annotated_img_rgb = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
 
-        else:
-            return JsonResponse({'success': False, 'error': 'Định dạng file không được hỗ trợ'})
+                # Lưu ảnh đã nhận diện
+                annotated_img_pil = Image.fromarray(annotated_img_rgb)
+                annotated_img_pil.save(output_path)
 
-        return JsonResponse({'success': True, 'url': file_url})
+            elif media.name.lower().endswith(('.mp4', '.avi', '.mov')):
+                # Xử lý video
+                cap = cv2.VideoCapture(file_path)
+                fourcc = cv2.VideoWriter_fourcc(*'H264')
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+                # Tạo video đầu ra
+                out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+
+                    # Nhận diện với YOLOv8
+                    results = model(frame)
+                    annotated_frame = results[0].plot()  # Vẽ bounding box và nhãn
+
+                    # Ghi frame đã nhận diện vào video đầu ra
+                    out.write(annotated_frame)
+
+                cap.release()
+                out.release()
+            else:
+                return JsonResponse({'success': False, 'error': 'Định dạng file không được hỗ trợ'})
+
+            logger.info(f"Xử lý file thành công")
+            return JsonResponse({'success': True, 'url': file_url})
+        
+        except Exception as e:
+            logger.error(f"Lỗi khi xử lý file: {str(e)}")
+            return JsonResponse({'success': False, 'error': f'Xử lý thất bại: {str(e)}'})
 
     return JsonResponse({'success': False, 'error': 'Không có file hoặc yêu cầu không hợp lệ'})
 

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from pathlib import Path
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -89,6 +90,35 @@ DETECT_DIR = os.path.join(MEDIA_ROOT, 'detect')
 # Tạo thư mục nếu chưa tồn tại
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(DETECT_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+            'stream': sys.stdout,  # Đảm bảo sử dụng stdout
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'encoding': 'utf-8',  # Sử dụng UTF-8 cho file log
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
