@@ -84,12 +84,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Định nghĩa thư mục con
-UPLOAD_DIR = os.path.join(MEDIA_ROOT, 'upload')
-DETECT_DIR = os.path.join(MEDIA_ROOT, 'detect')
-
-# Tạo thư mục nếu chưa tồn tại
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-os.makedirs(DETECT_DIR, exist_ok=True)
+RESULTS_DIR = os.path.join(MEDIA_ROOT, 'results')
+os.makedirs(RESULTS_DIR, exist_ok=True)
 
 LOGGING = {
     'version': 1,
@@ -98,7 +94,7 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
-            'stream': sys.stdout,  # Đảm bảo sử dụng stdout
+            'stream': sys.stdout,
         },
         'file': {
             'class': 'logging.FileHandler',
@@ -163,7 +159,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 

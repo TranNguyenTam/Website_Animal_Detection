@@ -10,9 +10,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.models import User
+from .models import Upload
 from django.forms import ValidationError
 from django.http import HttpResponseNotFound, JsonResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from ultralytics import YOLO
 from PIL import Image
@@ -118,20 +120,6 @@ def upload(request):
 logger = logging.getLogger(__name__)
 
 @csrf_exempt
-def download_file(request, filename):
-    file_path = os.path.join(settings.DETECT_DIR, filename)
-
-    if not os.path.exists(file_path):
-        return HttpResponseNotFound('File not found')
-
-    original_name = request.GET.get('name', filename)
-
-    mime_type, _ = mimetypes.guess_type(file_path)
-    response = FileResponse(open(file_path, 'rb'), content_type=mime_type)
-    response['Content-Disposition'] = f'attachment; filename="{original_name}"'
-    return response
-
-@csrf_exempt
 def upload_media(request):
     if request.method == 'POST' and request.FILES.get('media'):
         media = request.FILES['media']
@@ -141,18 +129,34 @@ def upload_media(request):
         file_ext = os.path.splitext(media.name)[1]
         unique_filename = f"{uuid.uuid4()}{file_ext}"
 
-        # Đường dẫn lưu file gốc trong thư mục upload
-        file_path = os.path.join(settings.UPLOAD_DIR, unique_filename)
+        # Định nghĩa loại file (image hoặc video)
+        is_image = media.name.lower().endswith(('.jpg', '.jpeg', '.png'))
+        is_video = media.name.lower().endswith(('.mp4', '.avi', '.mov'))
+
+        if not (is_image or is_video):
+            return JsonResponse({'success': False, 'error': 'Định dạng file không được hỗ trợ'})
+        
+        # Tạo đối tượng Upload để lưu vào database
+        upload_instance = Upload(
+            user=request.user if request.user.is_authenticated else None,
+            original_filename = original_filename,
+        )
+        
+        # Gán file vào field tương ứng (image hoặc video)
+        media.name = unique_filename
+        media_field = 'image' if is_image else 'video'
+        upload_instance.__setattr__(media_field, media)
 
         # Lưu file gốc
         try:
-            with open(file_path, 'wb+') as destination:
-                for chunk in media.chunks():
-                    destination.write(chunk)
-
+            # Lưu đối tượng vào database
+            upload_instance.save()
         except Exception as e:
-            # logger.error(f"Lỗi khi lưu file: {str(e)}")
+            logger.error(f"Lỗi khi lưu vào database: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Lưu file thất bại: {str(e)}'})
+
+        # Lấy đường dẫn file đã lưu từ database
+        file_path = os.path.join(settings.MEDIA_ROOT, upload_instance.__getattribute__(media_field).name)
 
         # Tải mô hình YOLOv8
         try:
@@ -165,11 +169,11 @@ def upload_media(request):
 
         # Xử lý file
         output_filename = f"processed_{unique_filename}"
-        output_path = os.path.join(settings.DETECT_DIR, output_filename)
-        file_url = f"{settings.MEDIA_URL}detect/{output_filename}"
+        output_path = os.path.join(settings.RESULTS_DIR, output_filename)  
+        file_url = f"{settings.MEDIA_URL}results/{output_filename}"
 
         try:
-            if media.name.lower().endswith(('.jpg', '.jpeg', '.png')):
+            if is_image:
                 # Nhận diện với YOLOv8
                 results = model(file_path)
 
@@ -180,10 +184,9 @@ def upload_media(request):
                 annotated_img_rgb = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
 
                 # Lưu ảnh đã nhận diện
-                annotated_img_pil = Image.fromarray(annotated_img_rgb)
-                annotated_img_pil.save(output_path)
+                Image.fromarray(annotated_img_rgb).save(output_path)
 
-            elif media.name.lower().endswith(('.mp4', '.avi', '.mov')):
+            elif is_video:
                 # Xử lý video
                 cap = cv2.VideoCapture(file_path)
                 fourcc = cv2.VideoWriter_fourcc(*'H264')
@@ -208,8 +211,10 @@ def upload_media(request):
 
                 cap.release()
                 out.release()
-            else:
-                return JsonResponse({'success': False, 'error': 'Định dạng file không được hỗ trợ'})
+
+            # Lưu đường dẫn file kết quả vào database
+            upload_instance.result.name = os.path.join('results', output_filename)
+            upload_instance.save()
 
             # Tạo tên file tải xuống
             if original_filename:
@@ -233,5 +238,21 @@ def upload_media(request):
 
     return JsonResponse({'success': False, 'error': 'Không có file hoặc yêu cầu không hợp lệ'})
 
+@csrf_exempt
+def download_file(request, filename):
+    file_path = os.path.join(settings.RESULTS_DIR, filename)
+
+    if not os.path.exists(file_path):
+        return HttpResponseNotFound('File not found')
+
+    original_name = request.GET.get('name', filename)
+
+    mime_type, _ = mimetypes.guess_type(file_path)
+    response = FileResponse(open(file_path, 'rb'), content_type=mime_type)
+    response['Content-Disposition'] = f'attachment; filename="{original_name}"'
+    return response
+
+@login_required
 def history(request):
-    return render(request,'myapp/history.html')
+    uploads = Upload.objects.filter(user=request.user).order_by('-uploaded_at')
+    return render(request, 'myapp/history.html', {'uploads': uploads})

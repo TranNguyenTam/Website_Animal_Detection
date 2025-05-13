@@ -6,7 +6,7 @@
   class="navbar navbar-expand-lg bg-white navbar-light sticky-top py-lg-0 px-4 px-lg-5 wow fadeIn"
   data-wow-delay="0.1s"
   >
-  <a href="{% url "index" %}" class="navbar-brand p-0">
+  <a href="{% url "upload" %}" class="navbar-brand p-0">
     <img class="img-fluid me-3" src="{% static 'myapp/images/icon/icon-10.png' %}" alt="Icon" />
     <h1 class="m-0 text-primary">AfricaVision</h1>
   </a>
@@ -36,4 +36,99 @@
   </nav>
   <!-- Navbar End -->
 
+  {% if user.is_authenticated %}
+  <div class="d-flex justify-content-center">
+    <h1 class="display-5 mt-1 mb-3">
+    Lịch sử nhận diện trên website của
+    <span class="text-primary">{{ user.username }}</span> !
+  </h1>
+  </div>
+
+  <section>
+    <div class="h-100">
+      <div class="d-flex align-items-center h-100">
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="p-0">
+                  <div class="table-responsive table-scroll" data-mdb-perfect-scrollbar="true" style="position: relative; height: 600px">
+                    <table class="table table-striped mb-0">
+                      <thead style="background-color: #2EB872; color: #EEEEEE">
+                        <tr>
+                          <th scope="col">Image</th>
+                          <th scope="col">Video</th>
+                          <th scope="col">Result</th>
+                          <th scope="col">Uploaded At</th>
+                          <th scope="col">Download</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for upload in uploads %}
+                        <tr>
+                          <!-- Cột Image -->
+                          <td>
+                            {% if upload.image %}
+                            <img src="{{ upload.image.url }}" alt="Image" style="max-width: 100px; max-height: 100px;" />
+                            {% else %}
+                            -
+                            {% endif %}
+                          </td>
+                          <!-- Cột Video -->
+                          <td>
+                            {% if upload.video %}
+                              <video width="300" controls>
+                                <source src="{{ upload.video.url }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                              </video>
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <!-- Cột Result -->
+                          <td>
+                            {% if upload.result %}
+                              {% if upload.file_type == 'image' %}
+                                <a href="{{ upload.result.url }}" target="_blank">
+                                  <button class="btn btn-primary">Xem ảnh</button>
+                                </a>
+                              {% elif upload.file_type == 'video' %}
+                                <a href="{{ upload.result.url }}" target="_blank">
+                                  <button class="btn btn-primary">Xem video</button>
+                                </a>
+                              {% else %}
+                                <button class="btn btn-secondary" disabled>File không hỗ trợ xem</button>
+                              {% endif %}
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                          <!-- Cột Uploaded At -->
+                          <td>{{ upload.uploaded_at|date:"d/m/Y H:i:s" }}</td>
+                          <!-- Cột Download -->
+                          <td>
+                            {% if upload.result %}
+                              <a href="{% url 'download_file' filename=upload.output_filename %}?name={{ upload.download_filename }}">
+                                <button class="btn btn-success">Tải xuống</button>
+                              </a>
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                          <td colspan="5" class="text-center">Không có bản ghi nào.</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 {% endblock body %}
