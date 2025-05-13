@@ -21,6 +21,9 @@ from PIL import Image
 
 # Create your views here.
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = YOLO(os.path.join(settings.BASE_DIR, 'myapp/models/best.pt')).to(device)
+
 # Đảm bảo console hỗ trợ UTF-8
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
@@ -113,6 +116,7 @@ def signout(request):
     # messages.success(request, 'Đăng xuất thành công!')
     return redirect('index')
 
+@login_required
 def upload(request):
     return render(request,'myapp/upload.html')
 
@@ -152,20 +156,10 @@ def upload_media(request):
             # Lưu đối tượng vào database
             upload_instance.save()
         except Exception as e:
-            logger.error(f"Lỗi khi lưu vào database: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Lưu file thất bại: {str(e)}'})
 
         # Lấy đường dẫn file đã lưu từ database
         file_path = os.path.join(settings.MEDIA_ROOT, upload_instance.__getattribute__(media_field).name)
-
-        # Tải mô hình YOLOv8
-        try:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            model = YOLO(os.path.join(settings.BASE_DIR, 'myapp/models/best.pt')).to(device)
-            
-        except Exception as e:
-            # logger.error(f"Lỗi khi tải mô hình: {str(e)}")
-            return JsonResponse({'success': False, 'error': f'Tải mô hình thất bại: {str(e)}'})
 
         # Xử lý file
         output_filename = f"processed_{unique_filename}"
@@ -223,8 +217,6 @@ def upload_media(request):
             else:
                 download_filename = f"ket_qua{file_ext}"
 
-            # logger.info(f"Xử lý file thành công")
-
             download_url = f"/download/{output_filename}?name={download_filename}"
 
             return JsonResponse({'success': True,
@@ -233,7 +225,6 @@ def upload_media(request):
                                   'download_filename': download_filename})
         
         except Exception as e:
-            # logger.error(f"Lỗi khi xử lý file: {str(e)}")
             return JsonResponse({'success': False, 'error': f'Xử lý thất bại: {str(e)}'})
 
     return JsonResponse({'success': False, 'error': 'Không có file hoặc yêu cầu không hợp lệ'})

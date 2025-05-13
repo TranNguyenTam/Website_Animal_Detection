@@ -20,24 +20,17 @@
   </button>
   <div class="collapse navbar-collapse py-4 py-lg-0" id="navbarCollapse">
     <div class="navbar-nav ms-auto">
-      {% if user.is_authenticated %}
       <a class="nav-item nav-link">Xin chào, {{ user.username }}!</a>
       <a href="{% url "history" %}" class="nav-item nav-link">Lịch sử</a>
     </div>
     <a href="{% url 'signout' %}" class="btn btn-primary"> Đăng xuất
     <i class="fa fa-arrow-right ms-3"></i>
     </a>
-    {% else %}
-    <a href="{% url 'signin' %}" class="btn btn-primary"> Đăng nhập
-      <i class="fa fa-arrow-right ms-3"></i>
-    </a>
-    {% endif %}
   </div>
   </nav>
   <!-- Navbar End -->
 
-  <!-- Header Start -->
-  {% if user.is_authenticated %}
+  <!-- Nhận diện ảnh hoặc video -->
   <div class="container-fluid p-0 mb-5">
   <div class="row g-0">
     <div class="col-lg-12 p-0 wow fadeIn" data-wow-delay="0.1s">
@@ -198,8 +191,6 @@
     handleUpload('imageUpload');
     handleUpload('videoUpload');
   </script>
-  {% endif %}
   <!-- Header End -->
   <br><br><br><br>
-  
 {% endblock body %}

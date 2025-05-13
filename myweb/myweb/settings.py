@@ -73,7 +73,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myweb.wsgi.application'
 
 # Cấu hình URL đăng nhập/đăng xuất
-LOGIN_URL = '/login/'
+LOGIN_URL = '/signin/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 

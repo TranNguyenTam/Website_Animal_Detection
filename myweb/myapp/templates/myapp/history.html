@@ -20,23 +20,17 @@
   </button>
   <div class="collapse navbar-collapse py-4 py-lg-0" id="navbarCollapse">
     <div class="navbar-nav ms-auto">
-      {% if user.is_authenticated %}
       <a class="nav-item nav-link">Xin chào, {{ user.username }}!</a>
       <a href="{% url "history" %}" class="nav-item nav-link active">Lịch sử</a>
     </div>
     <a href="{% url 'signout' %}" class="btn btn-primary"> Đăng xuất
     <i class="fa fa-arrow-right ms-3"></i>
     </a>
-    {% else %}
-    <a href="{% url 'signin' %}" class="btn btn-primary"> Đăng nhập
-      <i class="fa fa-arrow-right ms-3"></i>
-    </a>
-    {% endif %}
   </div>
   </nav>
   <!-- Navbar End -->
 
-  {% if user.is_authenticated %}
+  <!-- Nội dung lịch sử upload -->
   <div class="d-flex justify-content-center">
     <h1 class="display-5 mt-1 mb-3">
     Lịch sử nhận diện trên website của
@@ -130,5 +124,4 @@
       </div>
     </div>
   </section>
-  {% endif %}
 {% endblock body %}
