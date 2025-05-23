@@ -5,6 +5,7 @@ import uuid
 import logging
 import sys
 import mimetypes
+import requests
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -117,8 +118,8 @@ def signup(request):
             messages.error(request, 'Mật khẩu không khớp.')
             return render(request, 'myapp/signup.html')
 
-        # Trong hàm signup
         existing_user = User.objects.filter(Q(username=username) | Q(email=email)).first()
+
         if existing_user:
             if existing_user.username == username:
                 logger.warning(f"Signup failed: Username {username} already exists")
@@ -155,6 +156,40 @@ def upload(request):
     logger.debug(f"User {request.user.username} accessed upload page")
     return render(request,'myapp/upload.html')
 
+# URL ngrok từ Flask app trên Colab
+NGROK_URL = 'https://9020-35-199-157-1.ngrok-free.app/predict'
+
+# Màu sắc BGR cho từng loài
+COLORS = {
+    "antelope": (0, 255, 0),         # Green
+    "buffalo": (0, 165, 255),        # Orange
+    "cheetah": (255, 255, 255),      # White
+    "crocodile": (42, 42, 165),      # Brownish
+    "elephant": (128, 0, 0),         # Maroon
+    "giraffe": (0, 255, 255),        # Yellow
+    "gorilla": (255, 0, 255),        # Magenta
+    "hippo": (128, 128, 128),        # Gray
+    "lion": (147, 20, 255),          # Purple
+    "rhino": (0, 128, 255),          # Sky Blue
+    "zebra": (0, 0, 255)             # Red
+}
+
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+
+def draw_detections(img, detections):
+    """Vẽ hộp giới hạn và nhãn lên ảnh."""
+    for det in detections:
+        label = det["label"].lower().strip()
+        conf = det["confidence"]
+        if conf < 0.5:
+            continue
+        x1, y1, x2, y2 = det["box"]
+        color = COLORS.get(label, (255, 255, 0))  # Mặc định: cyan
+        text = f"{label} ({conf * 100:.1f}%)"
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+        cv2.putText(img, text, (x1, y1 - 10), FONT, 0.6, color, 2)
+    return img
+
 def get_yolo_model():
     """Tải mô hình YOLO chỉ khi cần."""
     global _model
@@ -170,6 +205,213 @@ def get_yolo_model():
             logger.error(f"Failed to load YOLO model: {str(e)}", exc_info=True)
             raise RuntimeError(f"Failed to load YOLO model: {str(e)}")
     return _model
+
+def process_image(file_path, output_path):
+    """Xử lý ảnh với YOLOv8 và lưu kết quả."""
+    logger.debug(f"Processing image: {file_path}")
+    try:
+        model = get_yolo_model()
+        results = model(file_path, imgsz=640)
+        img = cv2.imread(file_path)
+        detections = []
+        for box in results[0].boxes:
+            x1, y1, x2, y2 = box.xyxy[0].tolist()  # Tọa độ hộp giới hạn
+            cls_id = int(box.cls[0])  # ID của lớp
+            confidence = float(box.conf[0])  # Độ tin cậy
+            label = model.names[cls_id]  # Tên lớp
+            detections.append({
+                "label": label,
+                "confidence": round(confidence, 2),
+                "box": [int(x1), int(y1), int(x2), int(y2)] 
+            })
+        
+        # Gỡ lỗi: In danh sách detections
+        logger.debug(f"Detections: {detections}")
+
+        annotated_img = draw_detections(img, detections)
+        annotated_img_rgb = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
+        Image.fromarray(annotated_img_rgb).save(output_path)
+        logger.info(f"Image processed and saved to {output_path}")
+    except cv2.error as e:
+        logger.error(f"OpenCV error processing image {file_path}: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Failed to process image {file_path}: {str(e)}", exc_info=True)
+        raise
+
+def process_image_on_GPU(file_path, output_path):
+    """Xử lý ảnh với YOLOv8 và lưu kết quả."""
+    logger.debug(f"Processing image: {file_path} on GPU")
+    try:
+        files = []
+        img = cv2.imread(file_path)
+        _, buffer = cv2.imencode('.jpg', img)
+        files.append(('files', (os.path.basename(file_path), buffer.tobytes(), 'image/jpeg')))
+        try:
+            response = requests.post(NGROK_URL, files=files, timeout=30)
+            if response.status_code == 200:
+                batch_detections = response.json().get("batch_detections", [])
+                if batch_detections:
+                    detections = batch_detections[0]
+                    img = draw_detections(img, detections)
+                    cv2.imwrite(output_path, img)
+                    logger.info(f"Image processed and saved to {output_path}")
+                else:
+                    logger.warning("Không có kết quả nhận diện nào được trả về.")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Lỗi kết nối tới server: {e}")
+
+    except cv2.error as e:
+        logger.error(f"OpenCV error processing image {file_path}: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Failed to process image {file_path}: {str(e)}", exc_info=True)
+        raise
+
+def process_video(file_path, output_path, frame_skip=1):
+    """Xử lý video với YOLOv8, bỏ qua frame để tối ưu hiệu suất."""
+    logger.debug(f"Processing video: {file_path} with frame_skip={frame_skip}")
+    try:
+        model = get_yolo_model()
+        cap = cv2.VideoCapture(file_path)
+        fourcc = cv2.VideoWriter_fourcc(*'H264')
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        frame_count = 0
+        batch_frames = []
+        original_frames = []
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            if frame_count % frame_skip == 0:
+                batch_frames.append(frame)
+                original_frames.append(frame.copy())
+
+                if len(batch_frames) == 16:
+                    # Nhận diện cả batch
+                    results = model(batch_frames, imgsz=640)
+
+                    for i in range(16):
+                        detections = []
+                        for box in results[i].boxes:
+                            x1, y1, x2, y2 = box.xyxy[0].tolist()
+                            cls_id = int(box.cls[0])
+                            confidence = float(box.conf[0])
+                            label = model.names[cls_id]
+                            detections.append({
+                                "label": label,
+                                "confidence": round(confidence, 2),
+                                "box": [int(x1), int(y1), int(x2), int(y2)]
+                            })
+                        logger.debug(f"Detections (frame {frame_count - 15 + i}): {detections}")
+                        annotated = draw_detections(original_frames[i], detections)
+                        out.write(annotated)
+                    
+                    batch_frames = []
+                    original_frames = []
+            else:
+                out.write(frame)
+
+            frame_count += 1
+
+        # Xử lý phần còn lại chưa đủ 16 frame
+        if batch_frames:
+            results = model(batch_frames, imgsz=640)
+            for i in range(len(batch_frames)):
+                detections = []
+                for box in results[i].boxes:
+                    x1, y1, x2, y2 = box.xyxy[0].tolist()
+                    cls_id = int(box.cls[0])
+                    confidence = float(box.conf[0])
+                    label = model.names[cls_id]
+                    detections.append({
+                        "label": label,
+                        "confidence": round(confidence, 2),
+                        "box": [int(x1), int(y1), int(x2), int(y2)]
+                    })
+                logger.debug(f"Detections (remaining frame): {detections}")
+                annotated = draw_detections(original_frames[i], detections)
+                out.write(annotated)
+
+        cap.release()
+        out.release()
+        logger.info(f"Video processed and saved to {output_path}")
+
+    except cv2.error as e:
+        logger.error(f"OpenCV error processing video {file_path}: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Failed to process video {file_path}: {str(e)}", exc_info=True)
+        raise
+
+def process_video_on_GPU(file_path, output_path):
+    """Xử lý video với YOLOv8, bỏ qua frame để tối ưu hiệu suất."""
+    logger.debug(f"Processing video: {file_path} on GPU")
+    try:
+        cap = cv2.VideoCapture(file_path)
+        fourcc = cv2.VideoWriter_fourcc(*'H264')
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        
+        batch_size = 32
+        frames = []
+        raw_frames = []
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            raw_frames.append(frame.copy())
+            _, buffer = cv2.imencode('.jpg', frame)
+            frames.append(('files', ('frame.jpg', buffer.tobytes(), 'image/jpeg')))
+
+            if len(frames) == batch_size:
+                try:
+                    response = requests.post(NGROK_URL, files=frames, timeout=30)
+                    if response.status_code == 200:
+                        detections = response.json().get("batch_detections", [])
+                        for dets, raw in zip(detections, raw_frames):
+                            result_frame = draw_detections(raw, dets)
+                            out.write(result_frame)
+                    else:
+                        logger.error(f"Lỗi khi gửi batch: {response.status_code}")
+                except requests.exceptions.RequestException as e:
+                    logger.error(f"Request exception: {e}")
+                frames = []
+                raw_frames = []
+            
+        if frames:
+            try:
+                response = requests.post(NGROK_URL, files=frames, timeout=30)
+                if response.status_code == 200:
+                    detections = response.json().get("batch_detections", [])
+                    for dets, raw in zip(detections, raw_frames):
+                        result_frame = draw_detections(raw, dets)
+                        out.write(result_frame)
+                else:
+                    logger.error(f"Lỗi khi gửi batch cuối: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"Request exception (cuối): {e}")
+
+        cap.release()
+        out.release()
+        logger.info(f"Video processed and saved to {output_path}")
+    except cv2.error as e:
+        logger.error(f"OpenCV error processing video {file_path}: {str(e)}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Failed to process video {file_path}: {str(e)}", exc_info=True)
+        raise
 
 def validate_and_save_file(request, media, original_filename):
     """Kiểm tra và lưu file vào database."""
@@ -201,59 +443,6 @@ def validate_and_save_file(request, media, original_filename):
         logger.error(f"Failed to save file {original_filename}: {str(e)}", exc_info=True)
         raise
 
-def process_image(file_path, output_path):
-    """Xử lý ảnh với YOLOv8 và lưu kết quả."""
-    logger.debug(f"Processing image: {file_path}")
-    try:
-        model = get_yolo_model()
-        results = model(file_path)
-        annotated_img = results[0].plot()
-        annotated_img_rgb = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
-        Image.fromarray(annotated_img_rgb).save(output_path)
-        logger.info(f"Image processed and saved to {output_path}")
-    except cv2.error as e:
-        logger.error(f"OpenCV error processing image {file_path}: {str(e)}", exc_info=True)
-        raise
-    except Exception as e:
-        logger.error(f"Failed to process image {file_path}: {str(e)}", exc_info=True)
-        raise
-
-def process_video(file_path, output_path, frame_skip=1):
-    """Xử lý video với YOLOv8, bỏ qua frame để tối ưu hiệu suất."""
-    logger.debug(f"Processing video: {file_path} with frame_skip={frame_skip}")
-    try:
-        model = get_yolo_model()
-        cap = cv2.VideoCapture(file_path)
-        fourcc = cv2.VideoWriter_fourcc(*'H264')
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-        frame_count = 0
-
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-            if frame_count % frame_skip == 0:
-                results = model(frame)
-                annotated_frame = results[0].plot()
-            else:
-                annotated_frame = frame
-            out.write(annotated_frame)
-            frame_count += 1
-
-        cap.release()
-        out.release()
-        logger.info(f"Video processed and saved to {output_path}")
-    except cv2.error as e:
-        logger.error(f"OpenCV error processing video {file_path}: {str(e)}", exc_info=True)
-        raise
-    except Exception as e:
-        logger.error(f"Failed to process video {file_path}: {str(e)}", exc_info=True)
-        raise
-
 @csrf_exempt
 def upload_media(request):
     """Xử lý tải lên và nhận diện ảnh/video với YOLOv8."""
@@ -276,8 +465,10 @@ def upload_media(request):
 
             if is_image:
                 process_image(file_path, output_path)
+                # process_image_on_GPU(file_path, output_path)
             else:
                 process_video(file_path, output_path)
+                # process_video_on_GPU(file_path, output_path)
 
             # Lưu kết quả vào database
             upload_instance.result.name = os.path.join(RESULT_SUBDIR, output_filename)
