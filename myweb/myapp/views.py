@@ -502,7 +502,7 @@ def upload_media(request):
 @csrf_exempt
 def download_file(request, filename):
     """Cung cấp file đã xử lý để tải xuống."""
-    file_path = os.path.join(settings.RESULTS_DIR, filename)
+    file_path = os.path.join(settings.MEDIA_ROOT, 'results', filename)
     logger.debug(f"Attempting to download file: {filename}")
 
     if not os.path.exists(file_path):
